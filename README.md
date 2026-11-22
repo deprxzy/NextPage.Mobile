@@ -1,144 +1,130 @@
 # NextPage Mobile
 
-Aplicativo da livraria NextPage desenvolvido para o Projeto Integrado Multidisciplinar (PIM) do curso de Análise e Desenvolvimento de Sistemas da UNIP. Esta versão apresenta um catálogo de livros obtido da API do projeto NextPage Web.
+Aplicativo Android da livraria NextPage para o PIM, desenvolvido com .NET 10, MAUI e C#.
+Compartilha a API e o SQL Server com o projeto Livraria-NextPage.
 
-O aplicativo utiliza .NET MAUI, C# e XAML. O destino de compilação atualmente habilitado é **Android**, com `net10.0-android`.
+## Funcionalidades
 
-## O que foi implementado
+- Catálogo com capas, preços em reais, atualização, pesquisa por título/autor/categoria sem distinção de acentos, filtro e ordenação.
+- Detalhes do livro com descrição, dados editoriais, estoque e seleção de quantidade.
+- Carrinho persistente no aparelho, alteração de quantidade e remoção.
+- Cadastro, login, logout e sessão com token em SecureStorage. Senhas não são salvas.
+- Perfil editável e alteração de senha.
+- Checkout em quatro etapas: destinatário, endereço/entrega, pagamento demonstrativo e revisão. Histórico com endereço, pagamento e frete.
+- Abertura e acompanhamento de chamados de suporte.
+- Consulta, criação e edição de avaliações de livros de pedidos entregues.
 
-- Tela inicial com identidade visual da NextPage.
-- Consulta assíncrona de `GET /api/Livros` com `HttpClient`.
-- Conversão da resposta JSON em modelos C#.
-- Lista de livros em uma `CollectionView`, alimentada por `ObservableCollection<Livro>`.
-- Exibição de capa, título, autor, gênero e preço.
-- Montagem do endereço das capas quando a API retorna um caminho relativo.
-- Atualização do catálogo ao exibir a tela e alerta em caso de falha na consulta.
+A compra registra o pedido e atualiza o estoque. Não há processamento de pagamentos reais.
+O carrinho é local, separado entre contas, e não sincroniza com o carrinho do site.
+A administração de livros, entregas e chamados continua no painel Web.
 
-## Estado dos elementos da interface
+## Organização
 
-| Recurso | Estado nesta versão |
-| --- | --- |
-| Carregamento do catálogo pela API | Implementado |
-| Exibição dos dados e capas | Implementada, depende da conexão com a API |
-| Campo de pesquisa | Presente no XAML, sem filtro conectado |
-| Botão “Ver detalhes” | Presente, sem ação ou navegação associada |
-| Botões “Início”, “Carrinho” e “Minha Conta” | Presentes, sem ações associadas |
-| Login, compras, pedidos e avaliações | Não implementados no aplicativo Mobile |
+- MainPage.xaml.cs: catálogo e pesquisa.
+- AppShell.xaml.cs: abas de livros, carrinho e conta.
+- Views/: detalhes, autenticação, conta, carrinho, pedidos, suporte e avaliações.
+- Core/: carrinho, frete, pesquisa e ciclo de sessão, independentes de Android.
+- Services/ApiClient.cs: contratos HTTP, Bearer por requisição e tratamento dos erros.
+- Services/AppServices.cs: composição dos serviços e armazenamento MAUI.
+- Configuration/ApiConfiguration.cs: endereço único da API e das capas.
+- Tests/NextPage.Mobile.Checks/: verificações do código real e integração com a API.
+- Tests/Run-Checks.ps1: executor com limpeza dos registros temporários.
 
-Esses fluxos existem em diferentes partes do projeto Web, mas ainda não foram integrados à versão Mobile.
+## Executar neste computador
 
-## Tecnologias e organização
+Na pasta pai projeto_continuação, execute Iniciar-NextPage.cmd. Ele inicia a API,
+aguarda o emulador, instala o APK assinado e abre o aplicativo.
 
-- .NET 10 e .NET MAUI.
-- C# e XAML.
-- `HttpClient` e `System.Net.Http.Json`.
-- `ObservableCollection` e `CollectionView`.
+Para desenvolver, use Abrir-Mobile.cmd. As ferramentas Android exigem caminhos sem
+acentos. O vínculo C:\Users\Bernardo\source\NextPagePIM aponta para a mesma pasta
+da Área de Trabalho; utilize esse caminho no terminal e no Visual Studio.
 
-```text
-NextPage.Mobile.slnx
-NextPage.Mobile.csproj
-├── Models/Livro.cs          # Livro, gênero e endereço completo da capa
-├── Services/LivroService.cs # Consulta HTTP do catálogo
-├── MainPage.xaml           # Interface do catálogo
-├── MainPage.xaml.cs        # Carregamento e atualização da coleção
-├── AppShell.xaml           # Rota da tela principal
-├── MauiProgram.cs          # Inicialização e fontes
-├── Platforms/              # Arquivos específicos de plataforma
-└── Resources/              # Estilos, fontes, ícones e splash
-```
+O global.json seleciona .NET SDK 10.0.404 ou patch compatível.
+O projeto inclui os assemblies no APK, permitindo instalá-lo sem o Fast Deployment.
 
-Embora existam arquivos do template para Windows, iOS e Mac Catalyst em `Platforms/`, somente Android está habilitado em `TargetFrameworks`. O perfil chamado “Windows Machine” no arquivo de lançamento não significa que o projeto atual compile para Windows.
+Na pasta do projeto, pelo terminal:
 
-## Executar localmente
+    dotnet build .\NextPage.Mobile.csproj -f net10.0-android
 
-### Requisitos
+A API precisa estar em execução e com o banco preparado. O catálogo no computador
+pode ser conferido em http://localhost:5177/api/Livros.
 
-- SDK do .NET 10 e ferramentas do .NET MAUI compatíveis com essa versão.
-- Visual Studio com a carga **Desenvolvimento de interface do usuário de aplicativo multiplataforma .NET** e componentes Android.
-- Android SDK, JDK compatível com a carga instalada e emulador Android ou dispositivo configurado para desenvolvimento.
-- API do NextPage Web em execução, com banco configurado e livros cadastrados.
+## Conexão
 
-### 1. Iniciar o Web
+MauiProgram configura ApiConfiguration ao iniciar:
 
-Siga o README do projeto NextPage Web. Confirme no computador que o endereço abaixo retorna um array JSON de livros:
+- Emulador Android: http://10.0.2.2:5177/.
+- Celular por USB: http://127.0.0.1:5177/, após adb reverse tcp:5177 tcp:5177.
 
-```text
-http://localhost:5177/api/Livros
-```
+O manifesto permite internet e HTTP para o desenvolvimento local. A API usa o perfil
+Development sem redirecionamento para HTTPS nessa configuração. Para outro servidor,
+ajuste a configuração centralizada; não publique credenciais ou chaves JWT no projeto.
 
-Uma resposta `[]` significa que a consulta não retornou livros. O aplicativo não inclui um catálogo local nem acessa o SQL Server diretamente.
+## Compra e sessão
 
-### 2. Ajustar os caminhos das ferramentas Android
+O aplicativo revalida os preços e o estoque antes de finalizar. A API recebe IDs dos livros, quantidades, modalidade de entrega e os dados de checkout; calcula os valores definitivos. O número completo do cartão e o CVV não são enviados nem salvos.
+A edição do carrinho e novas finalizações ficam bloqueadas durante o envio.
+Se houver falha de rede no envio, o app orienta consultar os pedidos antes de repetir.
 
-O arquivo `NextPage.Mobile.csproj` contém caminhos fixos do ambiente de desenvolvimento original:
+O histórico utiliza o total registrado no pedido, incluindo o frete, corrigido também
+em PedidoController.MeusPedidos no projeto da API.
 
-```xml
-<AndroidSdkDirectory>C:\Users\Usuario\AppData\Local\Android\Sdk</AndroidSdkDirectory>
-<JavaSdkDirectory>C:\Program Files\Java\jdk-17</JavaSdkDirectory>
-```
+A sessão expirada exige novo login. Uma resposta atrasada de uma sessão anterior
+não apaga um login mais recente. Sair limpa o carrinho; trocar de cliente não recupera
+os itens de outra conta.
 
-Atualize essas propriedades para os diretórios reais do SDK e do JDK compatível instalados no seu PC, ou remova as duas definições para usar a detecção das ferramentas do ambiente. O caminho com `jdk-17` é uma configuração recebida, não uma garantia de compatibilidade com todas as versões do workload.
+## Testes
 
-### 3. Configurar o endereço da API
+Sem emulador nem API, na pasta do projeto:
 
-O endereço precisa ser ajustado em **dois pontos**:
+    powershell -NoProfile -ExecutionPolicy Bypass -File .\Tests\Run-Checks.ps1
 
-| Arquivo | Configuração |
-| --- | --- |
-| `Services/LivroService.cs` | `BaseAddress` do `HttpClient` |
-| `Models/Livro.cs` | Prefixo de URL da propriedade `ImagemCompleta` |
+São 44 verificações de carrinho, estoque, persistência, isolamento entre contas,
+frete, pesquisa, sessão, autorização HTTP e falhas de conexão.
 
-Ambos usam atualmente `http://127.0.0.1:5177/`. No emulador Android, esse endereço se refere ao próprio emulador. Para acessar a API no computador anfitrião pelo emulador padrão do Android, use `10.0.2.2`, conforme a [documentação do .NET MAUI](https://learn.microsoft.com/en-us/dotnet/maui/data-cloud/local-web-services?view=net-maui-10.0).
+Com a API local e o banco LivrariaDB disponíveis:
 
-Em `Services/LivroService.cs`:
+    powershell -NoProfile -ExecutionPolicy Bypass -File .\Tests\Run-Checks.ps1 -Live
 
-```csharp
-BaseAddress = new Uri("http://10.0.2.2:5177/")
-```
+A suíte completa tem 76 verificações. Inclui cadastro, login inválido/válido, perfil,
+troca de senha, compra, estoque, frete no histórico, chamados, avaliação após entrega
+e permissões. Usa uma conta temporária e remove seus registros, restaurando o estoque,
+em um bloco de limpeza. A conta administrativa local do ambiente é lida de
+../.local/acessos.txt para preparar o pedido entregue do teste.
 
-Em `Models/Livro.cs`, no retorno que concatena caminhos relativos:
+Se um processo for interrompido, o identificador temporário fica em
+../.local/mobile-test-fixture.json; a próxima execução -Live tenta concluir sua limpeza.
 
-```csharp
-return "http://10.0.2.2:5177/" + ImagemUrl.TrimStart('/');
-```
+## Validação realizada
 
-URLs de imagem que já são absolutas são preservadas pelo model. Nesse caso, o host gravado na própria URL também precisa ser acessível pelo dispositivo.
+- Compilação Android sem erros ou avisos.
+- 76 verificações de lógica e integração aprovadas.
+- Emulador: pesquisa, detalhes, adição ao carrinho, cadastro, login, confirmação da compra,
+  histórico com frete, perfil, suporte, avaliações e logout conferidos pela interface.
 
-Em um celular físico, utilize um endereço acessível ao aparelho; o `10.0.2.2` é específico do emulador. A API precisa aceitar conexões pelo endereço escolhido. O perfil Web recebido escuta em `localhost`, portanto não basta trocar somente a URL do aplicativo para testar pela rede.
+## Checkout e correções de usabilidade
 
-O manifesto Android já inclui permissão de internet e `usesCleartextTraffic="true"` para o HTTP usado nesta configuração de desenvolvimento. Se a API redirecionar para HTTPS, utilize uma configuração de desenvolvimento compatível; não ignore erros de certificado.
+As telas de checkout e contato de https://github.com/Theuz20/Livraria-NextPage/tree/master/LivrariaPIM/wwwroot/pages serviram de referência para o fluxo mobile.
 
-### 4. Abrir e executar
+O checkout exige nome, e-mail, telefone, CPF, CEP, rua, número, bairro, cidade e UF. A validação de CPF é de formato, sem consulta cadastral. O cartão é demonstrativo: 4111 1111 1111 1111, validade futura e CVV 123. Pix e boleto registram a escolha; não geram cobrança, QR Code ou linha digitável. O usuário revisa todos os dados antes de confirmar. A API exige Checkout quando Origem=mobile; chamadas antigas da Web continuam compatíveis.
 
-1. Abra `NextPage.Mobile.slnx` ou `NextPage.Mobile.csproj` no Visual Studio.
-2. Aguarde a restauração dos pacotes e confirme a disponibilidade das ferramentas Android.
-3. Selecione um emulador Android ou dispositivo configurado.
-4. Execute o projeto, mantendo a API Web em funcionamento.
-5. Confira se os livros e as capas são carregados na tela inicial.
+Adicionar ao carrinho usa aviso dentro da própria tela. O título da aba não é alterado durante a navegação. Ações bloqueiam somente o botão acionado, mantendo os campos utilizáveis. Novo chamado inclui assunto editável, categoria e mensagem; o Android redimensiona a tela para o teclado. Os quatro livros locais receberam descrições pelo script da API.
 
-Para restaurar e compilar pelo terminal, depois de configurar os caminhos e instalar as ferramentas:
+O iniciador deste computador usa NextPage_API_34 (Android 14 AOSP, 1536 MB) para reduzir consumo de memória; o SDK de compilação continua sendo Android 36. O AVD anterior NextPage_API_36 foi preservado. O teclado na tela é habilitado pelo iniciador.
 
-```powershell
-dotnet restore .\NextPage.Mobile.csproj
-dotnet build .\NextPage.Mobile.csproj -f net10.0-android
-```
+Logs de exceção ficam no diretório privado do app em files/nextpage-diagnostics.log. As evidências de build, integração e interface ficam na pasta local ../.local, fora do Git.
 
-## Problemas comuns
 
-| Sintoma | O que conferir |
-| --- | --- |
-| Alerta “Erro ao carregar livros” | API iniciada, banco disponível, host e porta corretos |
-| Catálogo vazio | Resposta de `/api/Livros` e existência de dados no banco |
-| Livros aparecem sem capa | Prefixo em `ImagemCompleta` e endereço retornado em `ImagemUrl` |
-| SDK ou JDK não encontrado | Caminhos fixos no `.csproj` e ferramentas Android instaladas |
-| Pesquisa ou botões sem resposta | Esses eventos ainda não foram implementados |
+## Layout, carrinho e cancelamento
 
-## Próximos desenvolvimentos
+A paleta azul e os textos em azul escuro/cinza escuro são compartilhados pelo Shell e pelos controles nativos. Nos detalhes do livro, o rodapé permanece visível com quantidade, ação de adicionar, aviso de sucesso e quantidade daquele livro no carrinho. O ícone Carrinho recebe um badge nativo com o total de unidades, atualizado sem reconstruir as abas.
 
-- Conectar o campo de pesquisa ao catálogo.
-- Implementar navegação e tela de detalhes.
-- Integrar login, conta, carrinho e pedidos à API.
-- Centralizar o endereço da API, hoje repetido em dois arquivos.
-- Adicionar estados de carregamento, lista vazia e testes automatizados.
+No Android, uma roda do mouse desloca o conteúdo em até 18 dp por evento. O gesto de arrastar com o dedo permanece disponível. O emulador local tem tela 720x1280 e densidade 240 (aproximadamente 480x853 dp), mostrando mais conteúdo que a densidade anterior 320.
 
-Não foram encontrados testes automatizados nesta versão. A presença do código de integração não equivale a uma validação de execução em todos os dispositivos.
+Em Meus pedidos > Ver pedido, Cancelar pedido solicita confirmação. Pedidos Pendentes ou Em preparação podem ser cancelados; Enviados/Entregues exigem suporte. O servidor verifica o dono do pedido e devolve o estoque uma única vez. Pedidos cancelados permanecem no histórico e não podem ser reabertos pelo painel. Não há estorno financeiro real neste ambiente de demonstração.
+
+O catálogo inicial deste computador contém quatro livros de exemplo cadastrados na preparação local; não é uma importação do banco de outro integrante. Os próximos livros devem ser cadastrados pelo painel administrativo Web.
+
+Para reaplicar a densidade e o teclado em outro emulador já iniciado, execute Tools/Configurar-Emulador.ps1. O parâmetro Density permite ajustar entre 160 e 480; o padrão é 240. Use ANDROID_HOME caso o SDK esteja em outra pasta.
+
+Validação da roda do mouse: eventos Android reais com eixo -1 e -100 deslocaram o formulário em 27 pixels cada (18 dp em densidade 240). A digitação após a rolagem e o cancelamento com confirmação foram conferidos na interface. Dados temporários foram removidos sem devolver novamente o estoque de pedidos já cancelados.

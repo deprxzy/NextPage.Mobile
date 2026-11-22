@@ -1,4 +1,4 @@
-﻿
+
 namespace NextPage.Mobile.Models;
 
 public class Livro
@@ -10,6 +10,7 @@ public class Livro
     public string Autor { get; set; } = string.Empty;
 
     public decimal Preco { get; set; }
+    public string PrecoFormatado => Core.Money.Format(Preco);
 
     public int Estoque { get; set; }
 
@@ -21,20 +22,7 @@ public class Livro
 
     public string? ImagemUrl { get; set; }
 
-    public string ImagemCompleta
-    {
-        get
-        {
-            if (string.IsNullOrWhiteSpace(ImagemUrl))
-                return string.Empty;
-
-            if (Uri.TryCreate(ImagemUrl, UriKind.Absolute, out var url))
-                return url.ToString();
-
-            return "http://127.0.0.1:5177/" + //PRECISA SER ALTERADO DEPOIS PELO CAUÃ
-                   ImagemUrl.TrimStart('/');
-        }
-    }
+    public string ImagemCompleta => Configuration.ApiConfiguration.ImageUrl(ImagemUrl);
 
 
     public string? Editora { get; set; }

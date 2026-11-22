@@ -1,14 +1,7 @@
-<?xml version="1.0" encoding="UTF-8" ?>
-<Shell
-    x:Class="NextPage.Mobile.AppShell"
-    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
-    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-    xmlns:local="clr-namespace:NextPage.Mobile"
-    Title="NextPage.Mobile">
-
-    <ShellContent
-        Title="Home"
-        ContentTemplate="{DataTemplate local:MainPage}"
-        Route="MainPage" />
-
-</Shell>
+<?xml version="1.0" encoding="utf-8" ?>
+<Shell xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+       xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+       x:Class="NextPage.Mobile.AppShell" FlyoutBehavior="Disabled"
+       Shell.BackgroundColor="#172554" Shell.ForegroundColor="White"
+       Shell.TitleColor="White" Shell.TabBarBackgroundColor="White"
+       Shell.TabBarForegroundColor="#1D4ED8" Shell.TabBarTitleColor="#1D4ED8" Shell.TabBarUnselectedColor="#334155" />

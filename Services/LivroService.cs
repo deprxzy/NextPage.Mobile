@@ -1,4 +1,4 @@
-﻿
+
 using System.Net.Http.Json;
 using NextPage.Mobile.Models;
 
@@ -12,7 +12,7 @@ public class LivroService
     {
         _httpClient = new HttpClient
         {
-            BaseAddress = new Uri("http://127.0.0.1:5177/")
+            BaseAddress = NextPage.Mobile.Configuration.ApiConfiguration.BaseAddress
         };
     }
 
