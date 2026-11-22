@@ -18,7 +18,9 @@ public sealed class CheckoutPage : AppPage
     private readonly Entry city = Ui.Field("Cidade");
     private readonly Picker state = new() { Title = "Estado (UF)", TextColor = Ui.Ink, ItemsSource = CheckoutValidation.States };
     private readonly Picker delivery = new() { Title = "Entrega", TextColor = Ui.Ink, ItemsSource = new[] { "Padrão", "Expressa" }, SelectedIndex = 0 };
-    private readonly Picker payment = new() { Title = "Pagamento", TextColor = Ui.Ink, ItemsSource = new[] { "Cartão de crédito", "Pix", "Boleto" }, SelectedIndex = 0 };
+    private readonly List<(string Method, RadioButton Radio, Border Card)> paymentOptions = [];
+    private readonly string paymentGroup = $"payment-{Guid.NewGuid():N}";
+    private string? selectedPayment;
     private readonly Entry cardNumber = Ui.Field("4111 1111 1111 1111", Keyboard.Numeric);
     private readonly Entry holder = Ui.Field("Nome impresso no cartão");
     private readonly Entry cvv = Ui.Field("CVV", Keyboard.Numeric, true);
@@ -50,9 +52,15 @@ public sealed class CheckoutPage : AppPage
             Ui.Text("Número do cartão"), cardNumber, Ui.Text("Titular"), holder, Ui.Text("Validade"), validity,
             Ui.Text("CVV"), cvv, Ui.Text("Parcelamento"), installments);
         var paymentStack = new VerticalStackLayout { Spacing = 14 };
-        paymentStack.Children.Add(Ui.Card(Ui.Text("Forma de pagamento", 19, true), payment, paymentHint));
+        paymentStack.Children.Add(Ui.Text("Forma de pagamento", 19, true));
+        paymentStack.Children.Add(Ui.Small("Toque em uma opção para selecionar. Você pode trocar antes de confirmar."));
+        paymentStack.Children.Add(PaymentOption("cartao", "Cartão de crédito", "Informe um cartão de teste e escolha as parcelas."));
+        paymentStack.Children.Add(PaymentOption("pix", "Pix", "Selecione para registrar o pedido com Pix demonstrativo."));
+        paymentStack.Children.Add(PaymentOption("boleto", "Boleto", "Selecione para registrar o pedido com boleto demonstrativo."));
+        paymentHint.TextColor = Ui.Blue;
+        paymentHint.FontAttributes = FontAttributes.Bold;
+        paymentStack.Children.Add(paymentHint);
         paymentStack.Children.Add(cardFields);
-        payment.SelectedIndexChanged += (_, _) => UpdatePayment();
         sections =
         [
             Ui.Card(Ui.Text("Dados do destinatário", 19, true), Ui.Text("Nome completo"), name,
@@ -83,14 +91,48 @@ public sealed class CheckoutPage : AppPage
         if (string.IsNullOrWhiteSpace(holder.Text)) holder.Text = profile.Nome;
         initialized = true;
     }
+    private Border PaymentOption(string method, string title, string description)
+    {
+        var radio = new RadioButton
+        {
+            Content = title, Value = method, GroupName = paymentGroup,
+            TextColor = Ui.Ink, FontSize = 17, FontAttributes = FontAttributes.Bold,
+            MinimumHeightRequest = 44
+        };
+        SemanticProperties.SetHint(radio, $"Selecionar {title} como forma de pagamento");
+        var card = Ui.Card(radio, Ui.Small(description));
+        radio.CheckedChanged += (_, args) => { if (args.Value) SelectPayment(method); };
+        var tap = new TapGestureRecognizer();
+        tap.Tapped += (_, _) => SelectPayment(method);
+        card.GestureRecognizers.Add(tap);
+        paymentOptions.Add((method, radio, card));
+        return card;
+    }
+    private void SelectPayment(string method)
+    {
+        if (selectedPayment == method) return;
+        if (selectedPayment == "cartao") cardNumber.Text = cvv.Text = "";
+        Notice("");
+        selectedPayment = method;
+        UpdatePayment();
+    }
     private void UpdatePayment()
     {
-        cardFields.IsVisible = payment.SelectedIndex == 0;
-        paymentHint.Text = payment.SelectedIndex switch
+        foreach (var option in paymentOptions)
         {
-            1 => "Pix selecionado. O pedido será registrado em modo de demonstração, sem gerar cobrança real.",
-            2 => "Boleto selecionado. O pedido será registrado em modo de demonstração, sem emitir cobrança bancária.",
-            _ => "Cartão de crédito em modo de demonstração. Número completo e CVV não são enviados nem salvos no pedido."
+            var selected = option.Method == selectedPayment;
+            option.Radio.IsChecked = selected;
+            option.Card.Stroke = selected ? Ui.Blue : Color.FromArgb("#CBD5E1");
+            option.Card.StrokeThickness = selected ? 2 : 1;
+            option.Card.BackgroundColor = selected ? Color.FromArgb("#EFF6FF") : Colors.White;
+        }
+        cardFields.IsVisible = selectedPayment == "cartao";
+        paymentHint.Text = selectedPayment switch
+        {
+            "pix" => "✓ Selecionado: Pix. Demonstração sem cobrança ou QR Code real.",
+            "boleto" => "✓ Selecionado: Boleto. Demonstração sem cobrança bancária.",
+            "cartao" => "✓ Selecionado: Cartão de crédito. Preencha os dados de teste abaixo. Não há cobrança real.",
+            _ => "Nenhuma forma selecionada. Escolha uma das opções acima."
         };
     }
     private CheckoutData Read()
@@ -101,9 +143,9 @@ public sealed class CheckoutPage : AppPage
             Nome = name.Text ?? "", Email = email.Text ?? "", Telefone = phone.Text ?? "", Cpf = cpf.Text ?? "",
             Cep = cep.Text ?? "", Rua = street.Text ?? "", Numero = number.Text ?? "", Complemento = extra.Text ?? "",
             Bairro = district.Text ?? "", Cidade = city.Text ?? "", Estado = state.SelectedItem?.ToString() ?? "",
-            MetodoPagamento = payment.SelectedIndex switch { 1 => "pix", 2 => "boleto", _ => "cartao" },
-            CartaoFinal = payment.SelectedIndex == 0 && digits.Length >= 4 ? digits[^4..] : null,
-            Parcelas = payment.SelectedIndex == 0 ? installments.SelectedIndex + 1 : null
+            MetodoPagamento = selectedPayment ?? "",
+            CartaoFinal = selectedPayment == "cartao" && digits.Length >= 4 ? digits[^4..] : null,
+            Parcelas = selectedPayment == "cartao" ? installments.SelectedIndex + 1 : null
         };
     }
     private void ShowStep(int index)
@@ -174,7 +216,7 @@ public sealed class PedidoSucessoPage : AppPage
         Body.Children.Add(Ui.Card(Ui.Text("Entrega", 19, true), Ui.Text(data.Nome), Ui.Text(data.EnderecoFormatado)));
         Body.Children.Add(Ui.Card(Ui.Text("Pagamento", 19, true), Ui.Text(data.PagamentoFormatado),
             Ui.Small("Pagamento simulado. Nenhuma cobrança foi realizada.")));
-        Body.Children.Add(Action("Acompanhar pedido", () => Navigation.PushAsync(new PedidosPage(Services))));
+        Body.Children.Add(Action("Acompanhar pedido", () => ((AppShell)Shell.Current).OpenOrdersAsync()));
         Body.Children.Add(Action("Continuar comprando", () => Shell.Current.GoToAsync("//principal/livros/inicio"), true));
     }
 }

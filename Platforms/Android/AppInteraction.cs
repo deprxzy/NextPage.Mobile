@@ -9,7 +9,7 @@ namespace NextPage.Mobile.AndroidUi;
 
 public sealed class GentleScrollViewHandler : ScrollViewHandler
 {
-    protected override Microsoft.Maui.Platform.MauiScrollView CreatePlatformView() => new GentleScrollView(Context);
+    protected override Microsoft.Maui.Platform.MauiScrollView CreatePlatformView() => new GentleScrollView(Context) { ClipToOutline = true, FillViewport = true };
 }
 public sealed class GentleScrollView(Android.Content.Context context) : Microsoft.Maui.Platform.MauiScrollView(context)
 {

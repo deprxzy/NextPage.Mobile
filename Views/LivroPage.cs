@@ -64,7 +64,7 @@ public sealed class LivroPage(AppServices services, int id) : AppPage(services, 
         selector.IsVisible = book.Estoque > 0;
         var buttons = new Grid { ColumnDefinitions = { new ColumnDefinition(new GridLength(2, GridUnitType.Star)), new ColumnDefinition(GridLength.Star) }, ColumnSpacing = 8 };
         buttons.Children.Add(add);
-        var open = Action("Ver carrinho", () => Shell.Current.GoToAsync("//principal/carrinho/itens"), true);
+        var open = Action("Ver carrinho", () => ((AppShell)Shell.Current).OpenCartAsync(), true);
         buttons.Children.Add(open); Grid.SetColumn(open, 1);
         SetFooter(new Border
         {

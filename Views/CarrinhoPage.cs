@@ -68,7 +68,7 @@ public sealed class CarrinhoPage : AppPage
         Body.Children.Add(Ui.Card(Ui.Text("Resumo do carrinho", 20, true),
             Ui.Text($"Subtotal: {Money.Format(Services.Cart.Subtotal)}", 22, true),
             Ui.Small("Na próxima etapa você informa os dados do destinatário, endereço, entrega e pagamento."),
-            checkout, Action("Meus pedidos", async () => { if (await RequireLoginAsync()) await Navigation.PushAsync(new PedidosPage(Services)); }, true)));
+            checkout, Action("Meus pedidos", async () => { if (await RequireLoginAsync()) await ((AppShell)Shell.Current).OpenOrdersAsync(); }, true)));
         if (!validated) Body.Children.Add(Action("Atualizar preços e estoque", LoadAsync, true));
     }
     private async Task CheckoutAsync()

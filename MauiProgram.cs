@@ -19,7 +19,11 @@ public static class MauiProgram
 			});
 
 #if ANDROID
-        builder.ConfigureMauiHandlers(handlers => handlers.AddHandler<ScrollView, AndroidUi.GentleScrollViewHandler>());
+        builder.ConfigureMauiHandlers(handlers =>
+        {
+            handlers.AddHandler<ScrollView, AndroidUi.GentleScrollViewHandler>();
+            handlers.AddHandler<AppShell, AndroidUi.CartShellRenderer>();
+        });
         AndroidUi.AppInteraction.ConfigureMouse();
 #endif
 

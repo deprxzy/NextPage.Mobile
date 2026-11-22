@@ -128,3 +128,9 @@ O catálogo inicial deste computador contém quatro livros de exemplo cadastrado
 Para reaplicar a densidade e o teclado em outro emulador já iniciado, execute Tools/Configurar-Emulador.ps1. O parâmetro Density permite ajustar entre 160 e 480; o padrão é 240. Use ANDROID_HOME caso o SDK esteja em outra pasta.
 
 Validação da roda do mouse: eventos Android reais com eixo -1 e -100 deslocaram o formulário em 27 pixels cada (18 dp em densidade 240). A digitação após a rolagem e o cancelamento com confirmação foram conferidos na interface. Dados temporários foram removidos sem devolver novamente o estoque de pedidos já cancelados.
+
+## Navegação do carrinho e escolha de pagamento
+
+Tocar na aba Carrinho retorna aos itens atuais, inclusive quando a aba já está selecionada e exibe um checkout ou confirmação anterior. Trocar de outra aba para Carrinho também remove as telas antigas desse fluxo. O gesto de voltar entre etapas do checkout continua disponível enquanto o usuário preenche os dados.
+
+Meus pedidos e Acompanhar pedido abrem o histórico na aba Minha conta. A seleção de pagamento exibe três opções com botões de rádio: Cartão de crédito, Pix e Boleto. A opção ativa recebe borda e fundo azul, marcação e texto de confirmação. Não existe uma escolha automática: é necessário selecionar o método antes de revisar. Trocar o método atualiza os campos e o resumo; sair de Cartão limpa número e CVV digitados.

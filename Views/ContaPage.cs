@@ -24,7 +24,7 @@ public sealed class ContaPage(AppServices services) : AppPage(services, "Minha c
         var phone = Ui.Field("Telefone", Keyboard.Telephone); phone.Text = profile.Telefone;
         Body.Children.Add(Ui.Text($"Olá, {profile.Nome.Split(' ', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? "leitor"}!", 24, true));
         Body.Children.Add(Ui.Card(Action("Meus pedidos", async () =>
-            { if (await RequireLoginAsync()) await Navigation.PushAsync(new PedidosPage(Services)); }),
+            { if (await RequireLoginAsync()) await ((AppShell)Shell.Current).OpenOrdersAsync(); }),
             Action("Minhas avaliações", async () =>
             { if (await RequireLoginAsync()) await Navigation.PushAsync(new AvaliacoesPage(Services)); }, true),
             Action("Suporte e chamados", async () =>
